@@ -20,6 +20,6 @@ namespace Torrent::Core{
     };
 
 	//Function sig
-	BValue parse_next(std::string_view& cursor);
+	BValue parse_next(std::string_view& cursor, std::string_view& info_slice);
 
 }

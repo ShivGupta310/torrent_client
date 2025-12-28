@@ -4,7 +4,7 @@
 
 namespace Torrent::Core{
 
-    BValue parse_next(std::string_view& cursor){
+    BValue parse_next(std::string_view& cursor, std::string_view& info_slice){
 
         if(cursor.empty()){
             throw std::runtime_error("Empty cursor/buffer");
@@ -67,10 +67,17 @@ namespace Torrent::Core{
                     BValue key_val = parse_next(cursor);
                     std::string key = std::get<std::string>(key_val.data);
 
-                    BValue val = parse_next(cursor);
-                    
-                    dict[key] = val;
+                    if (key == "info"){
+                        std::string_view val_start = cursor;
+                        dict[key] = parse_next(cursor, info_slice);
+                        size_t len = cursor.data() - val_start.data();
+                        info_slice = std::string_view(val_start.data(), len);
 
+                    } else{
+
+                    dict[key]  = parse_next(cursor, info_slice);
+
+                    }
                 }
                 
                 if (cursor.empty()){
