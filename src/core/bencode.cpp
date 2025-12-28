@@ -14,7 +14,7 @@ namespace Torrent::Core{
 
         switch(lead){
             //int
-            case 'i':
+            case 'i': {
                 cursor.remove_prefix(1);
                 //find end 'e'
                 size_t end = cursor.find('e');
@@ -36,17 +36,52 @@ namespace Torrent::Core{
                 cursor.remove_prefix(end + 1);
 
                 return BValue{val};
-                break;
+            }
             
             //list
-            case 'l':
-                break;
+            case 'l': {
+                cursor.remove_prefix(1);
+                BList list;
+
+                while(!cursor.empty() && cursor[0] != 'e'){
+                    BValue item = parse_next(cursor);
+                    list.push_back(item);
+                }
+
+                if (cursor.empty()){
+                    throw std::runtime_error("Invalid bencode list: missing 'e'");
+                }
+
+                //advance past 'e'
+                cursor.remove_prefix(1);
+                return BValue{list};
+            }
 
             //dict
-            case 'd':
-                break;
+            case 'd': {
+                cursor.remove_prefix(1);
+                BDict dict;
+
+                while(!cursor.empty() && cursor[0] != 'e'){
+
+                    BValue key_val = parse_next(cursor);
+                    std::string key = std::get<std::string>(key_val.data);
+
+                    BValue val = parse_next(cursor);
+                    
+                    dict[key] = val;
+
+                }
+                
+                if (cursor.empty()){
+                    throw std::runtime_error("Invalid bencode dictionary: missing 'e'");
+                }
+
+                cursor.remove_prefix(1);
+                return BValue{dict};
+            }
             
-            default:
+            default: {
                 if (std::isdigit(lead)){
 
                     size_t colon = cursor.find(':');
@@ -83,7 +118,9 @@ namespace Torrent::Core{
                 else{
                     throw std::runtime_error("Invalid bencode lead character");
                 }
+            }
         }
+        throw std::runtime_error("Invalid bencode character encountered");
     }
 
 }
