@@ -26,12 +26,16 @@ namespace Torrent::Core{
                 //number substr
                 std::string_view num_str = cursor.substr(0, end);
 
-                long long val = std::stoll(std::string(num_str));
+                long long val = 0;
+                auto [ptr, ec] = std::from_chars(num_str.data(), num_str.data() + num_str.size(), val);
+                if (ec != std::errc()) {
+                    throw std::runtime_error("Invalid bencode int format");
+                }
 
                 //adv cursor
                 cursor.remove_prefix(end + 1);
 
-                return BValue{ val };
+                return BValue{val};
                 break;
             
             //list
@@ -56,6 +60,18 @@ namespace Torrent::Core{
                     auto [ptr, ec] = std::from_chars(len_str.data(), len_str.data() + len_str.size(), len);
                     
                     if (ec == std::errc()) {
+                        //advance cursor past length and colon
+
+                        //overflow check 
+                        if (cursor.size() < colon + 1 + len){
+                            throw std::runtime_error("Invalid bencode string: length exceeds buffer size");
+                        }
+                        cursor.remove_prefix(colon + 1);
+                        
+                       std::string bytes = std::string(cursor.substr(0, len));
+                        //advance the cursor and return
+                        cursor.remove_prefix(len);
+                        return BValue{ bytes};
                     
                     } else if (ec == std::errc::invalid_argument) {
                         throw std::runtime_error("Invalid string length: not a number");
@@ -68,21 +84,6 @@ namespace Torrent::Core{
                     throw std::runtime_error("Invalid bencode lead character");
                 }
         }
-
-    
-        //byte strings
-        else if (std::isdigit(cursor[0])){
-            size_t colon = cursor.find(':');
-            if (colon == std::string_view::npos){
-                throw std::runtime_error("Invalid bencode string: missing ':'");
-            }
-
-            std::string_view len_str = cursor.substr(0, colon);
-            
-
-        }
-
-
     }
 
 }
