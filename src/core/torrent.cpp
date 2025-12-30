@@ -32,4 +32,42 @@ namespace Torrent::Core{
         }
         return ss.str();
     }
+
+    std::string TorrentFile::get_tracker_url() const {
+        const auto& dict = std::get<BDict>(root.data);    
+        if (dict.count("announce")) {
+            return std::get<std::string>(dict.at("announce").data);
+        }
+        else{
+            return "";
+        }
+    }
+
+    long long TorrentFile::get_total_size() const {
+        const auto& root_dict = std::get<BDict>(root.data);
+        const auto& info = std::get<BDict>(root_dict.at("info").data);
+
+        // Case 1: one file
+        if (info.count("length")) {
+            return std::get<long long>(info.at("length").data);
+        }
+
+        //Case 2: many files
+
+        if (info.count("files")) {
+            long long total = 0;
+            const auto& files = std::get<BList>(info.at("files").data);
+
+            for (const auto& file_val : files) {
+                const auto& file_dict = std::get<BDict>(file_val.data);
+                total += std::get<long long>(file_dict.at("length").data);
+            }
+
+            return total;
+        }
+
+        return 0;
+    }
+
+    
 }

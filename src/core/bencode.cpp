@@ -44,7 +44,7 @@ namespace Torrent::Core{
                 BList list;
 
                 while(!cursor.empty() && cursor[0] != 'e'){
-                    BValue item = parse_next(cursor);
+                    BValue item = parse_next(cursor, info_slice);
                     list.push_back(item);
                 }
 
@@ -64,7 +64,7 @@ namespace Torrent::Core{
 
                 while(!cursor.empty() && cursor[0] != 'e'){
 
-                    BValue key_val = parse_next(cursor);
+                    BValue key_val = parse_next(cursor, info_slice);
                     std::string key = std::get<std::string>(key_val.data);
 
                     if (key == "info"){
