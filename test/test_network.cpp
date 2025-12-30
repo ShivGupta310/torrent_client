@@ -13,15 +13,21 @@ int main() {
         std::cout << "--- Network Test ---" << std::endl;
         std::cout << "Target URL: " << url << std::endl;
 
-        // 1. Test URL Parsing
+        // Test URL Parsing
         auto addr = Torrent::Network::parse_tracker_url(url);
         std::cout << "1. Parsed Host: " << addr.host << std::endl;
         std::cout << "2. Parsed Port: " << addr.port << std::endl;
 
-        // 2. Test DNS Resolution
+        // Test DNS Resolution
         std::cout << "3. Resolving IP..." << std::endl;
         std::string ip = Torrent::Network::resolve_host(addr.host);
         std::cout << "SUCCESS: Resolved to " << ip << std::endl;
+
+        //Try establishing a connecttion
+        Torrent::Network::TrackerClient client(addr.host, addr.port);
+        std::cout << "4. Sending Connect Request..." << std::endl;
+        uint64_t conn_id = client.connect();
+        std::cout << "SUCCESS! Received Connection ID: " << conn_id << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << "NETWORK TEST FAILED: " << e.what() << std::endl;
